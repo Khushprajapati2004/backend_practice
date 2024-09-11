@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
+const {jwtAuthMiddleware, generateToken} = require('../jwt');
 const Person = require("../Models/Person");
 
 //GET METHOD
-router.get("/", async (req, res) => {
+router.get("/", jwtAuthMiddleware , async (req, res) => {
   try {
     const data = await Person.find();
     console.log("Successfullly get the data");
@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST  METHOD
-router.post("/", async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
     const data = req.body; // assuming the request body contains person data
 
@@ -25,12 +25,46 @@ router.post("/", async (req, res) => {
 
     const response = await newPerson.save();
     console.log("data saved");
-    res.status(200).json(response);
+
+    const payload = {
+      id: response.id,
+      username : response.username
+    } 
+
+    const token = generateToken(payload);
+    console.log('Token is: ', token);
+    
+
+    res.status(200).json({response:response, token:token});
   } catch (err) {
     console.log(err);
     res.status(500).json({ Error: "Internal server error" });
   }
 });
+
+router.post('/login', async(req,res)=> {
+  try {
+    const {username,password} = req.body;
+
+    const user = await Person.findOne({username: username});
+
+    if( !user || !(await user.comparePassword(password))) {
+      res.status(401).json({Error: 'Inavalid username or password'});
+    }
+
+    const payload = {
+      id: user.id,
+      username: user.username
+    }
+
+    const token = generateToken(payload);
+
+    res.json(token);
+  } catch (err) {
+      console.log(err);
+      res.status(500).json({Error: 'Internal server error'});
+  }
+})
 
 // Get data using the parameter
 router.get("/:workType", async (req, res) => {

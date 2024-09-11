@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 4000;
 app.use(passport.initialize());
 
 const localAuthMiddleware = passport.authenticate('local', {session:false});
+
 app.get("/", (req, res) => {
   res.send("server is on");
 });
@@ -23,10 +24,10 @@ app.get("/", (req, res) => {
 // import Routers
 const personRoutes = require('./routes/personRoutes');
 const menuRoutes = require('./routes/menuRoutes');
-const Person = require("./Models/Person");
+
 
 // use router
-app.use('/person', localAuthMiddleware , personRoutes);
+app.use('/person', personRoutes);
 app.use('/menuItem', menuRoutes);
 
 
